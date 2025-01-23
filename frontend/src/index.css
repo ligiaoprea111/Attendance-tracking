@@ -190,3 +190,12 @@ button {
       color: #555;
   }
 
+  ul li:hover {
+    background-color: lightgreen; /* Schimbă fundalul la hover */
+    cursor: pointer; /* Afișează cursorul de click */
+    transition: background-color 0.3s ease; /* Efect de tranziție pentru schimbarea fundalului */
+    border-radius: 5px; /* Opțional: colțuri rotunjite */
+    padding: 5px; /* Adaugă spațiu interior pentru un aspect mai clar */
+}
+
+

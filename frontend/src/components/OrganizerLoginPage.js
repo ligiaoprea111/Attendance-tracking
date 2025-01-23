@@ -31,6 +31,8 @@ const OrganizerLoginPage = () => {
             if (response.ok) {
                 alert('Conectare reușită!');
                 console.log(data); // Afișează răspunsul în consolă (opțional)
+                 // Salvează ID-ul utilizatorului în localStorage
+            localStorage.setItem('organizator_id', data.organizator.id);
                 navigate('/vizualizare'); // Navighează către pagina de evenimente
             } else {
                 alert(data.message); // Afișează mesajul de eroare din backend
