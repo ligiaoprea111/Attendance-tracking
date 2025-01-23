@@ -6,7 +6,7 @@ const ParticipaPage = () => {
     const [eventCode, setEventCode] = useState('');
     const [participantName, setParticipantName] = useState('');
 
-    const handleParticipa = () => {
+    const handleParticipa = async () => {
         if (!eventCode) {
             alert('Vă rugăm să introduceți codul întâlnirii!');
             return;
@@ -16,8 +16,35 @@ const ParticipaPage = () => {
             return;
         }
 
-        alert('Participare reușită!');
-        navigate('/login');
+        try {
+            const response = await fetch('http://localhost:5000/join-event', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    codEveniment: eventCode,
+                    numeParticipant: participantName,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Eroare la conectarea la eveniment.');
+            }
+
+            // Redirecționează către Meeting Room cu detalii despre eveniment
+            navigate('/meeting-room', {
+                state: {
+                    eventName: data.eveniment.nume,
+                    eventCode: eventCode,
+                },
+            });
+        } catch (error) {
+            console.error('Eroare la conectarea participantului:', error);
+            alert('Eroare la conectarea participantului.');
+        }
     };
 
     return (

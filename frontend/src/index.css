@@ -198,4 +198,60 @@ button {
     padding: 5px; /* Adaugă spațiu interior pentru un aspect mai clar */
 }
 
+/* Stiluri pentru Meeting Room */
+.meeting-room-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f5f5f5; /* Gri deschis */
+  padding: 20px;
+}
+
+.meeting-room-title {
+  font-size: 2rem;
+  color: #006400; /* Verde închis */
+  margin-bottom: 20px;
+}
+
+.participant-list {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+  width: 100%;
+  max-width: 500px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.participant-list li {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  color: #333;
+}
+
+.participant-list li:last-child {
+  border-bottom: none;
+}
+
+.leave-button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #d9534f; /* Roșu */
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.leave-button:hover {
+  background-color: #c9302c; /* Roșu închis */
+}
+
+.leave-button:active {
+  transform: translateY(2px);
+}
 
