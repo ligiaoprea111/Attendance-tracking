@@ -5,6 +5,8 @@ const VizualizarePage = () => {
     const [evenimenteViitoare, setEvenimenteViitoare] = useState([]);
     const [grupuriEvenimente, setGrupuriEvenimente] = useState([]);
     const [evenimenteGrup, setEvenimenteGrup] = useState([]);
+    const [participants, setParticipants] = useState({});
+    const [selectedEventId, setSelectedEventId] = useState(null);
     const [viewType, setViewType] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -76,6 +78,32 @@ const VizualizarePage = () => {
         }
     };
 
+    const fetchParticipants = async (eventId) => {
+        try {
+            const response = await fetch(`http://localhost:5000/events/${eventId}/participants`);
+            if (!response.ok) {
+                throw new Error('Eroare la încărcarea participanților.');
+            }
+            const data = await response.json();
+            setParticipants((prev) => ({
+                ...prev,
+                [eventId]: data,
+            }));
+            setSelectedEventId(eventId);
+        } catch (err) {
+            console.error('Eroare la încărcarea participanților:', err);
+            alert('Eroare la încărcarea participanților.');
+        }
+    };
+
+    const toggleParticipantsView = (eventId) => {
+        if (selectedEventId === eventId) {
+            setSelectedEventId(null); // Ascunde participanții dacă sunt deja afișați
+        } else {
+            fetchParticipants(eventId); // Încarcă participanții doar dacă nu sunt deja afișați
+        }
+    };
+
     const handleShowPastEvents = () => setViewType('trecute');
     const handleShowFutureEvents = () => setViewType('viitoare');
     const handleShowGroups = () => setViewType('grupuri');
@@ -125,6 +153,23 @@ const VizualizarePage = () => {
                                 <div className="event-buttons">
                                     <button onClick={() => handleCopy(event.cod)}>Copiază Cod</button>
                                     <button onClick={() => handleDelete(event.id)}>Șterge</button>
+                                    <button onClick={() => toggleParticipantsView(event.id)}>
+                                        {selectedEventId === event.id ? 'Ascunde Participanți' : 'Vezi Participanți'}
+                                    </button>
+                                    {selectedEventId === event.id && participants[event.id] && (
+                                        <ul>
+                                            {participants[event.id].length > 0 ? (
+                                                participants[event.id].map((participant) => (
+                                                    <li key={participant.id}>
+                                                        {participant.nume} -{' '}
+                                                        {new Date(participant.ora_inregistrare).toLocaleString()}
+                                                    </li>
+                                                ))
+                                            ) : (
+                                                <li>Nu există participanți pentru acest eveniment.</li>
+                                            )}
+                                        </ul>
+                                    )}
                                 </div>
                             </li>
                         ))}

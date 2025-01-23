@@ -6,6 +6,10 @@ import sequelize from './db/dbconnection.js';
 import cors from 'cors';
 import Eveniment from './models/Eveniment.js';
 import GrupEvenimente from './models/GrupEvenimente.js';
+import Participant from './models/Participant.js';
+import { format } from 'fast-csv';
+
+
 
 sequelize.authenticate()
     .then(() => console.log('Conexiunea la baza de date a fost realizată cu succes!'))
@@ -170,22 +174,137 @@ app.get('/groups/:groupId/events', async (req, res) => {
     }
 });
 
-app.delete('/events/:eventId', async (req, res) => {
+app.post('/join-event', async (req, res) => {
+    const { codEveniment, numeParticipant } = req.body;
+
+    try {
+        const eveniment = await Eveniment.findOne({ where: { cod: codEveniment } });
+
+        if (!eveniment) {
+            return res.status(404).json({ message: 'Evenimentul nu există.' });
+        }
+
+        const now = new Date();
+const oraInregistrare = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+console.log('Ora înregistrare:', oraInregistrare);
+
+        const participantNou = await Participant.create({
+            nume: numeParticipant,
+            eveniment_id: eveniment.id,
+        });
+
+        res.status(200).json({
+            message: 'V-ați conectat cu succes la eveniment.',
+            eveniment,
+            participant: participantNou,
+        });
+    } catch (error) {
+        console.error('Eroare la conectarea la eveniment:', error);
+        res.status(500).json({ message: 'Eroare pe server.' });
+    }
+});
+
+app.get('/events/:eventId/participants', async (req, res) => {
     const { eventId } = req.params;
 
     try {
-        const rezultat = await Eveniment.destroy({
-            where: { id: eventId },
-        });
+        const participanti = await Participant.findAll({ where: { eveniment_id: eventId } });
 
-        if (rezultat === 0) {
-            return res.status(404).json({ message: 'Evenimentul nu a fost găsit.' });
+        if (participanti.length === 0) {
+            return res.status(404).json({ message: 'Nu există participanți pentru acest eveniment.' });
         }
 
-        res.status(200).json({ message: 'Eveniment șters cu succes.' });
+        res.status(200).json(participanti);
     } catch (error) {
-        console.error('Eroare la ștergerea evenimentului:', error);
-        res.status(500).json({ message: 'Eroare la ștergerea evenimentului.' });
+        console.error('Eroare la obținerea participanților:', error);
+        res.status(500).json({ message: 'Eroare la obținerea participanților.' });
+    }
+});
+
+// Endpoint pentru exportul participanților la un eveniment specific
+app.get('/events/:eventId/participants/export', async (req, res) => {
+    const { eventId } = req.params;
+
+    try {
+        const participanti = await Participant.findAll({ where: { eveniment_id: eventId } });
+
+        if (participanti.length === 0) {
+            return res.status(404).json({ message: 'Nu există participanți pentru acest eveniment.' });
+        }
+
+        const filePath = `exports/participanti_eveniment_${eventId}.csv`;
+
+        const csvStream = format({ headers: true });
+        const writableStream = fs.createWriteStream(filePath);
+
+        csvStream.pipe(writableStream);
+        participanti.forEach(participant => {
+            csvStream.write({
+                ID: participant.id,
+                Nume: participant.nume,
+                Ora_Inregistrare: participant.ora_inregistrare,
+            });
+        });
+
+        csvStream.end();
+        writableStream.on('finish', () => {
+            res.download(filePath, `participanti_eveniment_${eventId}.csv`, err => {
+                if (err) {
+                    console.error('Eroare la descărcarea fișierului:', err);
+                }
+                fs.unlinkSync(filePath); // Șterge fișierul după descărcare
+            });
+        });
+    } catch (error) {
+        console.error('Eroare la exportul participanților:', error);
+        res.status(500).json({ message: 'Eroare la exportul participanților.' });
+    }
+});
+
+// Endpoint pentru exportul participanților la un grup de evenimente
+app.get('/groups/:groupId/participants/export', async (req, res) => {
+    const { groupId } = req.params;
+
+    try {
+        const evenimente = await Eveniment.findAll({ where: { grup_id: groupId } });
+        if (evenimente.length === 0) {
+            return res.status(404).json({ message: 'Nu există evenimente pentru acest grup.' });
+        }
+
+        const evenimentIds = evenimente.map(event => event.id);
+        const participanti = await Participant.findAll({ where: { eveniment_id: evenimentIds } });
+
+        if (participanti.length === 0) {
+            return res.status(404).json({ message: 'Nu există participanți pentru acest grup.' });
+        }
+
+        const filePath = `exports/participanti_grup_${groupId}.csv`;
+
+        const csvStream = stringify({ headers: true });
+        const writableStream = fs.createWriteStream(filePath);
+
+        csvStream.pipe(writableStream);
+        participanti.forEach(participant => {
+            csvStream.write({
+                ID: participant.id,
+                Nume: participant.nume,
+                Eveniment_ID: participant.eveniment_id,
+                Ora_Inregistrare: participant.ora_inregistrare,
+            });
+        });
+
+        csvStream.end();
+        writableStream.on('finish', () => {
+            res.download(filePath, `participanti_grup_${groupId}.csv`, err => {
+                if (err) {
+                    console.error('Eroare la descărcarea fișierului:', err);
+                }
+                fs.unlinkSync(filePath); // Șterge fișierul după descărcare
+            });
+        });
+    } catch (error) {
+        console.error('Eroare la exportul participanților:', error);
+        res.status(500).json({ message: 'Eroare la exportul participanților.' });
     }
 });
 
