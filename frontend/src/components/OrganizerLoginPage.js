@@ -6,7 +6,7 @@ const OrganizerLoginPage = () => {
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
 
-    const handleLogin = () => {
+    const handleLogin = async () => {
         if (!email) {
             alert('Vă rugăm să introduceți un email!');
             return;
@@ -16,8 +16,29 @@ const OrganizerLoginPage = () => {
             return;
         }
 
-        alert('Conectare reușită!');
-        navigate('/vizualizare');
+        try {
+            // Trimite cererea POST către backend
+            const response = await fetch('http://localhost:5000/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, parola: password }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert('Conectare reușită!');
+                console.log(data); // Afișează răspunsul în consolă (opțional)
+                navigate('/vizualizare'); // Navighează către pagina de evenimente
+            } else {
+                alert(data.message); // Afișează mesajul de eroare din backend
+            }
+        } catch (error) {
+            console.error('Eroare la conectarea la server:', error);
+            alert('Eroare la conectarea la server. Vă rugăm să încercați din nou.');
+        }
     };
 
     return (

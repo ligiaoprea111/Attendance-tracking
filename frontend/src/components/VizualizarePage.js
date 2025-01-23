@@ -1,15 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const VizualizarePage = () => {
-    const [events, setEvents] = useState([]);
+    const [evenimenteTrecute, setEvenimenteTrecute] = useState([]);
+    const [evenimenteViitoare, setEvenimenteViitoare] = useState([]);
+    const [viewType, setViewType] = useState(null); // 'trecute' sau 'viitoare'
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const handleShowPastEvents = () => {
-        setEvents(['Eveniment trecut 1', 'Eveniment trecut 2']);
-    };
+    const organizerId = 1; // Înlocuiește cu ID-ul real al organizatorului
 
-    const handleShowFutureEvents = () => {
-        setEvents(['Eveniment viitor 1', 'Eveniment viitor 2']);
-    };
+    useEffect(() => {
+        const fetchEvents = async () => {
+            try {
+                setLoading(true); // Indică încărcarea datelor
+                const response = await fetch(`http://localhost:5000/events/${organizerId}`);
+                
+                if (!response.ok) {
+                    throw new Error('Eroare la încărcarea evenimentelor');
+                }
+
+                const data = await response.json();
+                setEvenimenteTrecute(data.trecute);
+                setEvenimenteViitoare(data.viitoare);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false); // Încărcarea s-a terminat
+            }
+        };
+
+        fetchEvents();
+    }, [organizerId]);
+
+    const handleShowPastEvents = () => setViewType('trecute');
+    const handleShowFutureEvents = () => setViewType('viitoare');
+
+    if (loading) {
+        return <p>Se încarcă evenimentele...</p>;
+    }
+
+    if (error) {
+        return <p>{error}</p>;
+    }
 
     return (
         <div className="container">
@@ -19,15 +51,31 @@ const VizualizarePage = () => {
                 <button onClick={handleShowFutureEvents}>Evenimente Viitoare</button>
             </div>
             <div id="events-display">
-                {events.length > 0 ? (
+                {viewType === 'trecute' && evenimenteTrecute.length > 0 ? (
                     <ul>
-                        {events.map((event, index) => (
-                            <li key={index}>{event}</li>
+                        {evenimenteTrecute.map((event) => (
+                            <li key={event.id}>
+                                {event.nume} - {new Date(`${event.data_eveniment}T${event.ora}`).toLocaleString()}
+                            </li>
                         ))}
                     </ul>
-                ) : (
-                    <p>Selectați o opțiune pentru a vedea evenimentele.</p>
-                )}
+                ) : viewType === 'trecute' ? (
+                    <p>Nu există evenimente trecute.</p>
+                ) : null}
+
+                {viewType === 'viitoare' && evenimenteViitoare.length > 0 ? (
+                    <ul>
+                        {evenimenteViitoare.map((event) => (
+                            <li key={event.id}>
+                                {event.nume} - {new Date(`${event.data_eveniment}T${event.ora}`).toLocaleString()}
+                            </li>
+                        ))}
+                    </ul>
+                ) : viewType === 'viitoare' ? (
+                    <p>Nu există evenimente viitoare.</p>
+                ) : null}
+
+                {viewType === null && <p>Selectați o opțiune pentru a vedea evenimentele.</p>}
             </div>
         </div>
     );

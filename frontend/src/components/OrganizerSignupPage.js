@@ -7,7 +7,7 @@ const OrganizerSignupPage = () => {
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
 
-    const handleSignup = () => {
+    const handleSignup = async () => {
         if (!name) {
             alert('Vă rugăm să introduceți numele!');
             return;
@@ -21,8 +21,33 @@ const OrganizerSignupPage = () => {
             return;
         }
 
-        alert('Cont creat cu succes!');
-        navigate('/vizualizare');
+        try {
+            // Trimite cererea POST către backend
+            const response = await fetch('http://localhost:5000/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    nume: name, // Trimite numele
+                    email,      // Trimite email-ul
+                    parola: password, // Trimite parola
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert('Cont creat cu succes!');
+                console.log(data); // Afișează răspunsul în consolă (opțional)
+                navigate('/login'); // Navighează către pagina de login
+            } else {
+                alert(data.message); // Afișează mesajul de eroare din backend
+            }
+        } catch (error) {
+            console.error('Eroare la conectarea la server:', error);
+            alert('Eroare la conectarea la server. Vă rugăm să încercați din nou.');
+        }
     };
 
     return (

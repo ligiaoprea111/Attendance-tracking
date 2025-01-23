@@ -6,6 +6,7 @@ import OrganizerLoginPage from './components/OrganizerLoginPage';
 import OrganizerSignupPage from './components/OrganizerSignupPage';
 import VizualizarePage from './components/VizualizarePage';
 import CreareEvenimentPage from './components/CreareEvenimentPage';
+import VizualizareEvenimentePage from './components/VizualizareEvenimentePage';
 
 function App() {
     return (
@@ -17,6 +18,7 @@ function App() {
                 <Route path="/signup" element={<OrganizerSignupPage />} />
                 <Route path="/vizualizare" element={<VizualizarePage />} />
                 <Route path="/creare-eveniment" element={<CreareEvenimentPage />} />
+                <Route path="/vizualizare" element={<VizualizareEvenimentePage />} />
             </Routes>
         </Router>
     );
